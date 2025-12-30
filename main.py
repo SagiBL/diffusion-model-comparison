@@ -90,20 +90,20 @@ def main():
     guidance_fn = lambda x: euclidean_guidance_direction(x, target_pos)
     guided_path = model.sample(start_pos, guidance_func=guidance_fn, guidance_scale=0.2)
     
-    # Calculate Distances
-    unguided_dists = get_distance_trace(unguided_path, target_pos)
-    guided_dists = get_distance_trace(guided_path, target_pos)
+    # Calculate Distance between Guided and Unguided samples at each step
+    # unguided_path and guided_path should have the same shape (Steps, Dim)
+    diffs = unguided_path - guided_path
+    dists_between_samples = np.linalg.norm(diffs, axis=1)
     
     # Plotting
     plt.figure(figsize=(10, 6))
-    iterations = range(len(unguided_dists))
+    iterations = range(len(dists_between_samples))
     
-    plt.plot(iterations, unguided_dists, label='Unguided', linewidth=2, linestyle='--')
-    plt.plot(iterations, guided_dists, label='Guided (Euclidean)', linewidth=2)
+    plt.plot(iterations, dists_between_samples, label='Distance (Guided vs Unguided)', linewidth=2, color='purple')
     
-    plt.title('Distance to Target vs Sampling Iteration')
-    plt.xlabel('Iteration')
-    plt.ylabel('Euclidean Distance to Target')
+    plt.title('Euclidean Distance between Guided and Unguided Samples')
+    plt.xlabel('Sampling Iteration')
+    plt.ylabel('Distance')
     plt.legend()
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     
