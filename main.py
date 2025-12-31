@@ -64,6 +64,39 @@ def main():
     output_file = "distance_plot.png"
     plt.savefig(output_file)
     print(f"Plot saved to {output_file}")
+    
+    # --- CoDiG Test ---
+    from CoDiGDiffusionModel import CoDiGDiffusionModel
+    print("\nRunning CoDiG Sampling...")
+    
+    obstacles = [(2.5, 2.5, 1.0)] # Obstacle at (2.5, 2.5) with radius 1.0
+    codig_model = CoDiGDiffusionModel(target_pos, obstacles, n_steps=args.steps, codig_scale=0.1)
+    
+    codig_model.set_initial_noise(start_pos)
+    # Run with target guidance AND obstacle avoidance
+    codig_path = codig_model.get_denoising_trajectory(guidance_func=guidance_fn, guidance_scale=0.2)
+    
+    # Plot Trajectories to see obstacle avoidance
+    plt.figure(figsize=(8, 8))
+    plt.plot(unguided_path[:, 0], unguided_path[:, 1], 'k--', label='Unguided')
+    plt.plot(guided_path[:, 0], guided_path[:, 1], 'b-', label='Euclidean Guided')
+    plt.plot(codig_path[:, 0], codig_path[:, 1], 'r-', label='CoDiG (Obstacle Avoidance)', linewidth=2)
+    
+    # Draw Obstacle
+    circle = plt.Circle((obstacles[0][0], obstacles[0][1]), obstacles[0][2], color='r', alpha=0.3)
+    plt.gca().add_patch(circle)
+    
+    plt.scatter([start_pos[0]], [start_pos[1]], c='g', marker='o', label='Start')
+    plt.scatter([target_pos[0]], [target_pos[1]], c='gold', marker='*', s=200, label='Target')
+    
+    plt.title('Trajectory Comparison: CoDiG vs Baseline')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("codig_trajectory.png")
+    print("CoDiG trajectory plot saved to codig_trajectory.png")
+
 
 if __name__ == "__main__":
     main()
