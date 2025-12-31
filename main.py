@@ -1,9 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from models import MockDiffusionModel
-
-# Removed MockDiffusionModel class definition (moved to models.py)
+from MockDiffusionModel import MockDiffusionModel
 
 def euclidean_guidance_direction(state, target_pos):
     """
@@ -32,18 +30,19 @@ def main():
     start_pos = np.array([5.0, 5.0]) # Start far away (noise)
     target_pos = np.array([0.0, 0.0]) # Target
     
-    model = MockDiffusionModel(start_pos, target_pos, n_steps=args.steps)
+    # Initialize model (without start_pos, as that's per-sample now)
+    model = MockDiffusionModel(target_pos, n_steps=args.steps)
     
     print("Running Un-guided Sampling...")
-    # Unguided: guidance_func is None
-    unguided_path = model.sample(start_pos, guidance_func=None)
+    # Unguided
+    model.set_initial_noise(start_pos)
+    unguided_path = model.get_denoising_trajectory(guidance_func=None)
     
     print("Running Guided Sampling...")
-    # Guided: Use euclidean direction
-    # We pass a lambda adapting the signature if necessary, or just the function
-    # The model.sample code expects guidance_func(state) -> vector
+    # Guided
     guidance_fn = lambda x: euclidean_guidance_direction(x, target_pos)
-    guided_path = model.sample(start_pos, guidance_func=guidance_fn, guidance_scale=0.2)
+    model.set_initial_noise(start_pos)
+    guided_path = model.get_denoising_trajectory(guidance_func=guidance_fn, guidance_scale=0.2)
     
     # Calculate Distance between Guided and Unguided samples at each step
     # unguided_path and guided_path should have the same shape (Steps, Dim)
