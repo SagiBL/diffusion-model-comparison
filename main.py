@@ -98,12 +98,24 @@ def main():
     hardflow_path = result_hardflow['trajectory']
     print(f"HardFlow time: {result_hardflow['time']:.4f}s")
 
+    # --- CFG++ Test ---
+    from CFGPlusPlusDiffusionModel import CFGPlusPlusDiffusionModel
+    print("\nRunning CFG++ Sampling...")
+    
+    # High scale to demonstrate effect
+    cfgpp_model = CFGPlusPlusDiffusionModel(pretrained_model, target_pos, n_steps=args.steps, cfg_scale=4.0)
+    cfgpp_model.set_initial_noise(start_pos)
+    result_cfgpp = cfgpp_model.get_denoising_trajectory() # Uses internal CFG scale
+    cfgpp_path = result_cfgpp['trajectory']
+    print(f"CFG++ time: {result_cfgpp['time']:.4f}s")
+
     # Plot Trajectories to see obstacle avoidance
     plt.figure(figsize=(10, 10))
-    plt.plot(unguided_path[:, 0], unguided_path[:, 1], 'k--', label='Unguided', alpha=0.5)
+    plt.plot(unguided_path[:, 0], unguided_path[:, 1], 'k--', label='Unguided', alpha=0.3)
     plt.plot(guided_path[:, 0], guided_path[:, 1], 'b-', label='Euclidean Guided')
-    plt.plot(codig_path[:, 0], codig_path[:, 1], 'r-', label='CoDiG (Soft Guidance)', linewidth=2)
-    plt.plot(hardflow_path[:, 0], hardflow_path[:, 1], 'g-', label='HardFlow (Hard Constraint)', linewidth=2)
+    plt.plot(codig_path[:, 0], codig_path[:, 1], 'r-', label='CoDiG')
+    plt.plot(hardflow_path[:, 0], hardflow_path[:, 1], 'g-', label='HardFlow')
+    plt.plot(cfgpp_path[:, 0], cfgpp_path[:, 1], 'm-', label='CFG++', linewidth=2)
     
     # Draw Obstacle
     circle = plt.Circle((obstacles[0][0], obstacles[0][1]), obstacles[0][2], color='r', alpha=0.3)
@@ -112,13 +124,13 @@ def main():
     plt.scatter([start_pos[0]], [start_pos[1]], c='g', marker='o', label='Start')
     plt.scatter([target_pos[0]], [target_pos[1]], c='gold', marker='*', s=200, label='Target')
     
-    plt.title('Trajectory Comparison: Baseline vs CoDiG vs HardFlow')
+    plt.title('Trajectory Comparison: All Methods')
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.legend()
     plt.grid(True)
-    plt.savefig("codig_hardflow_comparison.png")
-    print("Comparison plot saved to codig_hardflow_comparison.png")
+    plt.savefig("all_methods_comparison.png")
+    print("Comparison plot saved to all_methods_comparison.png")
 
 
 if __name__ == "__main__":
