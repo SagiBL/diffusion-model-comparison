@@ -120,6 +120,17 @@ def main():
     langevin_path = result_langevin['trajectory']
     print(f"Langevin MCMC time: {result_langevin['time']:.4f}s")
 
+    # --- CoBL-Diffusion Test ---
+    from CoBLDiffusionModel import CoBLDiffusionModel
+    print("\nRunning CoBL-Diffusion Sampling...")
+    
+    # Needs explicit Obstacle and Target definitions for CBF/CLF
+    cobl_model = CoBLDiffusionModel(pretrained_model, target_pos, obstacles, n_steps=args.steps, alpha=0.5, gamma=2.0)
+    cobl_model.set_initial_noise(start_pos)
+    result_cobl = cobl_model.get_denoising_trajectory()
+    cobl_path = result_cobl['trajectory']
+    print(f"CoBL-Diffusion time: {result_cobl['time']:.4f}s")
+
     # Plot Trajectories to see obstacle avoidance
     plt.figure(figsize=(10, 10))
     plt.plot(unguided_path[:, 0], unguided_path[:, 1], 'k--', label='Unguided', alpha=0.3)
@@ -127,7 +138,8 @@ def main():
     plt.plot(codig_path[:, 0], codig_path[:, 1], 'r-', label='CoDiG')
     plt.plot(hardflow_path[:, 0], hardflow_path[:, 1], 'g-', label='HardFlow')
     plt.plot(cfgpp_path[:, 0], cfgpp_path[:, 1], 'm-', label='CFG++')
-    plt.plot(langevin_path[:, 0], langevin_path[:, 1], 'c-', label='Langevin MCMC', linewidth=2)
+    plt.plot(langevin_path[:, 0], langevin_path[:, 1], 'c-', label='Langevin MCMC')
+    plt.plot(cobl_path[:, 0], cobl_path[:, 1], 'y-', label='CoBL-Diffusion', linewidth=2.5) # Yellow/Orange
     
     # Draw Obstacle
     circle = plt.Circle((obstacles[0][0], obstacles[0][1]), obstacles[0][2], color='r', alpha=0.3)
@@ -141,8 +153,8 @@ def main():
     plt.ylabel('Y')
     plt.legend()
     plt.grid(True)
-    plt.savefig("all_methods_comparison_v2.png")
-    print("Comparison plot saved to all_methods_comparison_v2.png")
+    plt.savefig("all_methods_comparison_v3.png")
+    print("Comparison plot saved to all_methods_comparison_v3.png")
 
 
 if __name__ == "__main__":
