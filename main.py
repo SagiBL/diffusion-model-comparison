@@ -109,13 +109,25 @@ def main():
     cfgpp_path = result_cfgpp['trajectory']
     print(f"CFG++ time: {result_cfgpp['time']:.4f}s")
 
+    # --- Langevin MCMC Test ---
+    from LangevinMCMCDiffusionModel import LangevinMCMCDiffusionModel
+    print("\nRunning Langevin MCMC Sampling...")
+    
+    # Using the obstacle and target interaction as the 'Verifier'
+    langevin_model = LangevinMCMCDiffusionModel(pretrained_model, target_pos, obstacles, n_steps=args.steps, mcmc_steps_per_iter=10, step_size=0.05)
+    langevin_model.set_initial_noise(start_pos)
+    result_langevin = langevin_model.get_denoising_trajectory() 
+    langevin_path = result_langevin['trajectory']
+    print(f"Langevin MCMC time: {result_langevin['time']:.4f}s")
+
     # Plot Trajectories to see obstacle avoidance
     plt.figure(figsize=(10, 10))
     plt.plot(unguided_path[:, 0], unguided_path[:, 1], 'k--', label='Unguided', alpha=0.3)
     plt.plot(guided_path[:, 0], guided_path[:, 1], 'b-', label='Euclidean Guided')
     plt.plot(codig_path[:, 0], codig_path[:, 1], 'r-', label='CoDiG')
     plt.plot(hardflow_path[:, 0], hardflow_path[:, 1], 'g-', label='HardFlow')
-    plt.plot(cfgpp_path[:, 0], cfgpp_path[:, 1], 'm-', label='CFG++', linewidth=2)
+    plt.plot(cfgpp_path[:, 0], cfgpp_path[:, 1], 'm-', label='CFG++')
+    plt.plot(langevin_path[:, 0], langevin_path[:, 1], 'c-', label='Langevin MCMC', linewidth=2)
     
     # Draw Obstacle
     circle = plt.Circle((obstacles[0][0], obstacles[0][1]), obstacles[0][2], color='r', alpha=0.3)
@@ -129,8 +141,8 @@ def main():
     plt.ylabel('Y')
     plt.legend()
     plt.grid(True)
-    plt.savefig("all_methods_comparison.png")
-    print("Comparison plot saved to all_methods_comparison.png")
+    plt.savefig("all_methods_comparison_v2.png")
+    print("Comparison plot saved to all_methods_comparison_v2.png")
 
 
 if __name__ == "__main__":
