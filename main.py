@@ -131,6 +131,16 @@ def main():
     cobl_path = result_cobl['trajectory']
     print(f"CoBL-Diffusion time: {result_cobl['time']:.4f}s")
 
+    # --- MPD Test ---
+    from MPDDiffusionModel import MPDDiffusionModel
+    print("\nRunning MPD Sampler...")
+    
+    mpd_model = MPDDiffusionModel(pretrained_model, target_pos, obstacles, n_steps=args.steps)
+    mpd_model.set_initial_noise(start_pos)
+    result_mpd = mpd_model.get_denoising_trajectory()
+    mpd_path = result_mpd['trajectory']
+    print(f"MPD time: {result_mpd['time']:.4f}s")
+
     # Plot Trajectories to see obstacle avoidance
     plt.figure(figsize=(10, 10))
     plt.plot(unguided_path[:, 0], unguided_path[:, 1], 'k--', label='Unguided', alpha=0.3)
@@ -139,7 +149,8 @@ def main():
     plt.plot(hardflow_path[:, 0], hardflow_path[:, 1], 'g-', label='HardFlow')
     plt.plot(cfgpp_path[:, 0], cfgpp_path[:, 1], 'm-', label='CFG++')
     plt.plot(langevin_path[:, 0], langevin_path[:, 1], 'c-', label='Langevin MCMC')
-    plt.plot(cobl_path[:, 0], cobl_path[:, 1], 'y-', label='CoBL-Diffusion', linewidth=2.5) # Yellow/Orange
+    plt.plot(cobl_path[:, 0], cobl_path[:, 1], 'y-', label='CoBL-Diffusion')
+    plt.plot(mpd_path[:, 0], mpd_path[:, 1], color='orange', linestyle='-',  linewidth=2.5, label='MPD')
     
     # Draw Obstacle
     circle = plt.Circle((obstacles[0][0], obstacles[0][1]), obstacles[0][2], color='r', alpha=0.3)
@@ -153,8 +164,8 @@ def main():
     plt.ylabel('Y')
     plt.legend()
     plt.grid(True)
-    plt.savefig("all_methods_comparison_v3.png")
-    print("Comparison plot saved to all_methods_comparison_v3.png")
+    plt.savefig("all_methods_comparison_v4.png")
+    print("Comparison plot saved to all_methods_comparison_v4.png")
 
 
 if __name__ == "__main__":
