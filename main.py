@@ -30,8 +30,14 @@ def main():
     start_pos = np.array([5.0, 5.0]) # Start far away (noise)
     target_pos = np.array([0.0, 0.0]) # Target
     
-    # Initialize model (without start_pos, as that's per-sample now)
-    model = MockDiffusionModel(target_pos, n_steps=args.steps)
+    # Initialize Pretrained Model (The physics/neural net)
+    from PretrainedModel import PretrainedDiffusionModel
+    pretrained_model = PretrainedDiffusionModel()
+    
+    # Initialize Samplers with the Shared Pretrained Model
+    
+    # 1. Baseline Sampler (MockDiffusionModel)
+    model = MockDiffusionModel(pretrained_model, target_pos, n_steps=args.steps)
     
     print("Running Un-guided Sampling...")
     # Unguided
@@ -74,7 +80,7 @@ def main():
     print("\nRunning CoDiG Sampling...")
     
     obstacles = [(2.5, 2.5, 1.0)] # Obstacle at (2.5, 2.5) with radius 1.0
-    codig_model = CoDiGDiffusionModel(target_pos, obstacles, n_steps=args.steps, codig_scale=0.1)
+    codig_model = CoDiGDiffusionModel(pretrained_model, target_pos, obstacles, n_steps=args.steps, codig_scale=0.1)
     
     codig_model.set_initial_noise(start_pos)
     # Run with target guidance AND obstacle avoidance
@@ -86,7 +92,7 @@ def main():
     from HardFlowDiffusionModel import HardFlowDiffusionModel
     print("\nRunning HardFlow Sampling...")
     
-    hardflow_model = HardFlowDiffusionModel(target_pos, obstacles, n_steps=args.steps)
+    hardflow_model = HardFlowDiffusionModel(pretrained_model, target_pos, obstacles, n_steps=args.steps)
     hardflow_model.set_initial_noise(start_pos)
     result_hardflow = hardflow_model.get_denoising_trajectory(guidance_func=guidance_fn, guidance_scale=0.2)
     hardflow_path = result_hardflow['trajectory']

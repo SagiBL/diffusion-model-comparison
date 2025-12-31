@@ -4,19 +4,18 @@ from diffusion_interface import DiffusionModel
 class CoDiGDiffusionModel(DiffusionModel):
     """
     CoDiG (Constraint-Aware Diffusion Guidance) Model.
-    
-    This model incorporates a barrier function guidance during sampling to avoid obstacles.
-    It follows the structure of the MockDiffusionModel for the underlying dynamics 
-    but adds the specific CoDiG sampling logic.
+    Uses the pretrained model for dynamics + adds barrier guidance.
     """
-    def __init__(self, target_pos, obstacles, n_steps=50, codig_scale=1.0):
+    def __init__(self, pretrained_model, target_pos, obstacles, n_steps=50, codig_scale=1.0):
         """
         Args:
+            pretrained_model: The shared base model.
             target_pos (array): Destination.
             obstacles (list of tuples): List of (x, y, radius) for circular obstacles.
             n_steps (int): Sampling steps.
             codig_scale (float): Strength of the barrier guidance.
         """
+        self.pretrained_model = pretrained_model
         self.target_pos = np.array(target_pos)
         self.obstacles = obstacles
         self.n_steps = n_steps
@@ -78,9 +77,8 @@ class CoDiGDiffusionModel(DiffusionModel):
         for t in range(self.n_steps):
             noise = np.random.randn(*current_state.shape) * 0.1
             
-            # 1. Standard Reverse Drift (Mock dynamics towards target)
-            drift = -0.05 * current_state 
-            # (Note: In a real model this comes from the UNet prediction)
+            # 1. Standard Reverse Drift from Pretrained Model
+            drift = self.pretrained_model.predict_drift(current_state, t)
             
             # 2. External Guidance (e.g., Euclidean to target)
             ext_guidance = np.zeros_like(current_state)

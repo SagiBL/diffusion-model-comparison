@@ -4,25 +4,17 @@ from diffusion_interface import DiffusionModel
 class HardFlowDiffusionModel(DiffusionModel):
     """
     HardFlow Model (Mock Implementation).
-    
-    This model enforces HARD constraints by performing trajectory optimization.
-    Unlike CoDiG (which uses soft guidance), HardFlow guarantees constraint satisfaction
-    by iteratively adjusting the trajectory.
-    
-    Algorithm (Simplified for Mock):
-    1. Generate an initial 'unconstrained' trajectory using the base diffusion dynamics.
-    2. Run an iterative optimization loop:
-       a. Identify points violating constraints (i.e., inside obstacles).
-       b. Project violating points to the safe boundary.
-       c. Apply smoothing/elasticity to maintain the 'flow' characteristics (temporal consistency).
+    Uses the pretrained model for the initial rollout, then optimizes it.
     """
-    def __init__(self, target_pos, obstacles, n_steps=50):
+    def __init__(self, pretrained_model, target_pos, obstacles, n_steps=50):
         """
         Args:
+            pretrained_model: The shared base model.
             target_pos (array): Destination.
             obstacles (list of tuples): List of (x, y, radius) for circular obstacles.
             n_steps (int): Sampling steps.
         """
+        self.pretrained_model = pretrained_model
         self.target_pos = np.array(target_pos)
         self.obstacles = obstacles
         self.n_steps = n_steps
@@ -56,20 +48,13 @@ class HardFlowDiffusionModel(DiffusionModel):
         # 1. Initial Rollout (Unconstrained)
         # We simulate the base process first to get the initial "Reference Trajectory"
         current_state = self.current_state.copy()
-        trajectory = [current_state.copy()]
-        
-        # NOTE: For HardFlow, we often treat the entire path as variables.
-        # Let's generate the naive path first.
-        # We need to reuse the same randomness for consistency if we were real HardFlow,
-        # but here we just generate *a* path and then fix it.
-        
-        # Pre-compute noise to freeze the underlying stochasticity? 
-        # For this mock, we'll just generating the path step-by-step.
         
         path_states = [current_state.copy()]
         for t in range(self.n_steps):
             noise = np.random.randn(*current_state.shape) * 0.1
-            drift = -0.05 * current_state 
+            
+            # Use shared pretrained model
+            drift = self.pretrained_model.predict_drift(current_state, t)
             
             ext_guidance = np.zeros_like(current_state)
             if guidance_func is not None:

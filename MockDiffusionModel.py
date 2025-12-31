@@ -3,10 +3,10 @@ from diffusion_interface import DiffusionModel
 
 class MockDiffusionModel(DiffusionModel):
     """
-    A mock diffusion model for testing the pipeline.
-    Simulates a reverse process from noise to a target (or random walk).
+    A basic sampler that uses the pretrained model's drift directly.
     """
-    def __init__(self, target_pos, n_steps=50):
+    def __init__(self, pretrained_model, target_pos, n_steps=50):
+        self.pretrained_model = pretrained_model
         self.target_pos = np.array(target_pos)
         self.n_steps = n_steps
         self.current_state = None
@@ -31,7 +31,9 @@ class MockDiffusionModel(DiffusionModel):
         
         for t in range(self.n_steps):
             noise = np.random.randn(*current_state.shape) * 0.1
-            drift = -0.05 * current_state 
+            
+            # Use the shared pretrained model for the physics/drift
+            drift = self.pretrained_model.predict_drift(current_state, t)
             
             guidance = np.zeros_like(current_state)
             if guidance_func is not None:
