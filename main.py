@@ -36,13 +36,17 @@ def main():
     print("Running Un-guided Sampling...")
     # Unguided
     model.set_initial_noise(start_pos)
-    unguided_path = model.get_denoising_trajectory(guidance_func=None)
+    result_unguided = model.get_denoising_trajectory(guidance_func=None)
+    unguided_path = result_unguided['trajectory']
+    print(f"Unguided time: {result_unguided['time']:.4f}s")
     
     print("Running Guided Sampling...")
     # Guided
     guidance_fn = lambda x: euclidean_guidance_direction(x, target_pos)
     model.set_initial_noise(start_pos)
-    guided_path = model.get_denoising_trajectory(guidance_func=guidance_fn, guidance_scale=0.2)
+    result_guided = model.get_denoising_trajectory(guidance_func=guidance_fn, guidance_scale=0.2)
+    guided_path = result_guided['trajectory']
+    print(f"Guided time: {result_guided['time']:.4f}s")
     
     # Calculate Distance between Guided and Unguided samples at each step
     # unguided_path and guided_path should have the same shape (Steps, Dim)
@@ -74,7 +78,9 @@ def main():
     
     codig_model.set_initial_noise(start_pos)
     # Run with target guidance AND obstacle avoidance
-    codig_path = codig_model.get_denoising_trajectory(guidance_func=guidance_fn, guidance_scale=0.2)
+    result_codig = codig_model.get_denoising_trajectory(guidance_func=guidance_fn, guidance_scale=0.2)
+    codig_path = result_codig['trajectory']
+    print(f"CoDiG time: {result_codig['time']:.4f}s")
     
     # Plot Trajectories to see obstacle avoidance
     plt.figure(figsize=(8, 8))

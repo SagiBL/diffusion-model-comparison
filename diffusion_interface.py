@@ -27,6 +27,8 @@ class DiffusionModel(ABC):
             guidance_scale (float, optional): Scalar to control guidance strength.
             
         Returns:
-            np.ndarray: The sequence of states from x_T to x_0.
+            dict: A dictionary containing:
+                - 'trajectory' (np.ndarray): The sequence of states.
+                - 'time' (float): Compute time in seconds.
         """
         pass

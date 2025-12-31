@@ -66,6 +66,9 @@ class CoDiGDiffusionModel(DiffusionModel):
         return grad
 
     def get_denoising_trajectory(self, guidance_func=None, guidance_scale=0.1):
+        import time
+        start_time = time.time()
+        
         if self.current_state is None:
             raise ValueError("Initial noise not set.")
             
@@ -94,4 +97,5 @@ class CoDiGDiffusionModel(DiffusionModel):
             current_state = next_state
             path.append(current_state.copy())
             
-        return np.array(path)
+        end_time = time.time()
+        return {'trajectory': np.array(path), 'time': end_time - start_time}
